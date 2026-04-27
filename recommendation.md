@@ -115,8 +115,8 @@ The recommendations are grouped by layer. Each item lists the **trade-off the ho
 - **Effort.** Half a day.
 
 ### 6.3 Guardrails for refusal
-- **Today.** "I don't know" is enforced only by the system prompt.
-- **Production.** Add a deterministic check: if the highest retrieval score is below a learned threshold (e.g. cosine score < 0.15), short-circuit to "I don't know" without calling the LLM. We already short-circuit on zero hits — this is the same logic with a numerical floor.
+- **Today.** "I don't know" is enforced by a strict prompt plus a deterministic guard: zero-hit retrieval, or no meaningful lexical overlap for generic no-entity questions, short-circuits before the LLM is called.
+- **Production.** Add a calibrated score threshold: if the highest retrieval score is below a learned floor (e.g. cosine score < 0.15), short-circuit to "I don't know" without calling the LLM. This should be selected from an evaluation set rather than guessed.
 - **Effort.** A few hours, plus eval to pick the threshold.
 
 ---

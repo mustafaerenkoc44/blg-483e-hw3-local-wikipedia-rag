@@ -122,8 +122,10 @@ The product addresses two questions an instructor asks during grading:
   bare `/api/generate` endpoint — no SDK wrappers.
 - **FR-5.2** Prompt the model with a strict "answer only from context"
   instruction.
-- **FR-5.3** When zero chunks are retrieved, short-circuit to
-  `"I don't know"` without calling the LLM.
+- **FR-5.3** When zero chunks are retrieved, or when generic
+  no-entity questions have no meaningful lexical support in the
+  retrieved context, short-circuit to `"I don't know"` without calling
+  the LLM.
 - **FR-5.4** Support a non-streaming and a streaming code path so both
   the CLI and the Streamlit UI feel responsive.
 

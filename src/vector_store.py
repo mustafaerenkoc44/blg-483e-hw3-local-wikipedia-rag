@@ -92,9 +92,20 @@ class MetadataDB:
         with closing(self._connect()) as conn, conn:
             conn.executescript(_SCHEMA)
 
+    def reset(self) -> None:
+        """Delete all stored documents and chunks while keeping the schema."""
+        with closing(self._connect()) as conn, conn:
+            conn.execute("DELETE FROM chunks")
+            conn.execute("DELETE FROM documents")
+            try:
+                conn.execute("DELETE FROM sqlite_sequence WHERE name IN ('documents', 'chunks')")
+            except sqlite3.OperationalError:
+                # sqlite_sequence is created lazily by SQLite for AUTOINCREMENT tables.
+                pass
+
     def upsert_document(self, doc) -> int:
         with closing(self._connect()) as conn, conn:
-            cur = conn.execute(
+            conn.execute(
                 """
                 INSERT INTO documents (entity_name, type, title, url, summary, text, fetched_at, char_length)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)

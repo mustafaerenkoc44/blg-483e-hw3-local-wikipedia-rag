@@ -27,6 +27,74 @@ from .vector_store import MetadataDB, VectorStore, metadata_for_chunk
 logger = logging.getLogger(__name__)
 
 
+_GENERIC_QUERY_TERMS = {
+    "about",
+    "answer",
+    "associated",
+    "between",
+    "compare",
+    "difference",
+    "discover",
+    "discovered",
+    "does",
+    "famous",
+    "known",
+    "located",
+    "person",
+    "people",
+    "place",
+    "places",
+    "president",
+    "random",
+    "tell",
+    "unknown",
+    "used",
+    "what",
+    "where",
+    "which",
+    "while",
+    "with",
+    "would",
+}
+
+
+def _content_terms(text: str) -> set[str]:
+    """Return query terms that should be visibly supported by context."""
+    import re
+
+    terms = set()
+    for token in re.findall(r"[\w'-]+", text.lower()):
+        if len(token) <= 3:
+            continue
+        if token in _GENERIC_QUERY_TERMS:
+            continue
+        terms.add(token)
+    return terms
+
+
+def context_supports_query(query: str, routed: RoutedQuery, hits: list[dict]) -> bool:
+    """Conservative refusal guard for no-entity and out-of-corpus questions.
+
+    Named entities already get explicit entity-filtered retrieval. For generic
+    questions, require at least one meaningful query term to appear in the
+    retrieved context before letting the LLM answer. This catches failure cases
+    such as "president of Mars" and "John Doe" without blocking normal entity
+    questions.
+    """
+    if routed.entities:
+        return True
+    terms = _content_terms(query)
+    if not terms:
+        return True
+    context_terms: set[str] = set()
+    for hit in hits:
+        context_terms.update(_content_terms(hit.get("text", "")))
+        metadata = hit.get("metadata", {})
+        context_terms.update(_content_terms(str(metadata.get("entity_name", ""))))
+        context_terms.update(_content_terms(str(metadata.get("title", ""))))
+    return bool(terms & context_terms)
+
+
 @dataclass
 class IngestionReport:
     documents_ingested: int = 0
@@ -54,8 +122,9 @@ class IngestionPipeline:
 
     def run(self, entities: Iterable[Entity] = ALL_ENTITIES, *, reset: bool = False) -> IngestionReport:
         if reset:
-            logger.info("Resetting vector store before ingestion")
+            logger.info("Resetting vector store and metadata database before ingestion")
             self.store.reset()
+            self.db.reset()
 
         report = IngestionReport()
         start = time.perf_counter()
@@ -129,14 +198,14 @@ class RAGEngine:
 
     def answer(self, query: str, top_k: int | None = None) -> RAGAnswer:
         routed, hits = self.retriever.retrieve(query, top_k=top_k)
-        if not hits:
+        if not hits or not context_supports_query(query, routed, hits):
             generation = GenerationResult(
                 answer="I don't know.",
-                prompt="",
+                prompt="No sufficiently relevant context was retrieved.",
                 model=self.generator.model,
                 elapsed_seconds=0.0,
             )
-            return RAGAnswer(query=query, answer=generation.answer, routed=routed, chunks=[], generation=generation)
+            return RAGAnswer(query=query, answer=generation.answer, routed=routed, chunks=hits, generation=generation)
 
         generation = self.generator.generate(query, hits)
         answer = generation.answer or "I don't know."
@@ -153,7 +222,7 @@ class RAGEngine:
         routed, hits = self.retriever.retrieve(query, top_k=top_k)
         yield "routed", routed
         yield "chunks", hits
-        if not hits:
+        if not hits or not context_supports_query(query, routed, hits):
             yield "token", "I don't know."
             yield "done", None
             return
