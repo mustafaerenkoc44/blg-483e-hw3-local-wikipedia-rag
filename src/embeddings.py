@@ -6,9 +6,9 @@ environment variable:
 * ``ollama`` (default) — calls ``POST /api/embeddings`` on the local
   Ollama daemon. Pull the model once with ``ollama pull nomic-embed-text``.
 * ``sentence-transformers`` — uses ``sentence-transformers`` from
-  Hugging Face (``all-MiniLM-L6-v2`` by default). Selected automatically
-  if Ollama is unreachable, or explicitly via env var. The model is
-  cached under ``~/.cache/huggingface``.
+  Hugging Face (``all-MiniLM-L6-v2`` by default). Select it explicitly
+  with ``RAG_EMBED_BACKEND=sentence-transformers``. The model is cached
+  under ``~/.cache/huggingface`` after first download.
 
 Both back-ends are fully local — no external API keys are needed and no
 data leaves the machine.

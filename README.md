@@ -53,7 +53,7 @@ Nothing leaves your machine. No API keys are required.
 
 ## Prerequisites
 
-- **Python 3.10 or newer** (tested on 3.11 and 3.14).
+- **Python 3.10–3.12 recommended** (tested with 3.11/3.12; newer Python versions may need matching `torch` wheels).
 - **Ollama** running locally on port `11434` — the standard default.
   Download: <https://ollama.com/download>.
 - ~3 GB of free disk space for the LLM weights and ~1 GB for Chroma + SQLite data.
@@ -114,18 +114,18 @@ Useful flags:
 
 | Flag | Effect |
 | --- | --- |
-| `--reset` | Wipe the Chroma collection before ingesting (keeps SQLite). |
+| `--reset` | Wipe Chroma vectors and SQLite metadata before ingesting. |
 | `--only "Albert Einstein,Eiffel Tower"` | Ingest a subset. Quote the comma list. |
 | `--batch-size N` | Embedding batch size; default 16. |
 
-Re-running ingestion is idempotent — documents are upserted by `entity_name` and chunks are replaced, so changing the chunker and re-running just re-indexes the same articles.
+Re-running ingestion without `--reset` is idempotent — documents are upserted by `entity_name` and chunks are replaced, so changing the chunker and re-running just re-indexes the same articles.
 
 A typical run on a laptop with `nomic-embed-text` finishes in **~3–5 minutes** for the full 40-entity catalogue.
 
 You can verify the corpus without the LLM:
 
 ```bash
-python scripts/smoke_test.py        # router + ingest + chunk + sqlite write
+python scripts/smoke_test.py        # router + one Wikipedia fetch + temp SQLite write
 python -m app.cli --stats           # prints corpus stats from SQLite + Chroma
 ```
 
@@ -205,7 +205,7 @@ Every setting in [`src/config.py`](src/config.py) is overridable via environment
 | --- | --- | --- |
 | `OLLAMA_HOST` | `http://localhost:11434` | Ollama daemon URL. |
 | `RAG_LLM_MODEL` | `llama3.2:3b` | Try `phi3`, `mistral`, `qwen2.5:3b`, etc. |
-| `RAG_EMBED_BACKEND` | `ollama` | `sentence-transformers` to use Hugging Face locally. |
+| `RAG_EMBED_BACKEND` | `ollama` | `sentence-transformers` to use a locally cached Hugging Face model. |
 | `RAG_EMBED_MODEL` | `nomic-embed-text` | Any Ollama embed model when backend is `ollama`. |
 | `RAG_CHUNK_SIZE` | `800` | Target chunk size in characters. |
 | `RAG_CHUNK_OVERLAP` | `150` | Overlap in characters. |
@@ -254,7 +254,7 @@ Wikipedia article titles are case-sensitive. If you see a 404 for an entity you 
 
 ## Demo video
 
-A 5-minute Loom walkthrough is linked at the top of [`recommendation.md`](recommendation.md). It covers system overview, live ingestion, live Q&A on people / places / mixed / failure cases, the routing decision, and the trade-offs we made.
+Before final submission, paste the unlisted Loom or YouTube URL at the top of [`recommendation.md`](recommendation.md). The recording should be about 5 minutes and cover system overview, live ingestion, live Q&A on people / places / mixed / failure cases, the routing decision, and the trade-offs we made.
 
 ---
 
