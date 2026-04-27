@@ -186,7 +186,11 @@ def main() -> int:
         return 0
 
     if args.ask:
-        result = engine.answer(args.ask, top_k=args.top_k)
+        try:
+            result = engine.answer(args.ask, top_k=args.top_k)
+        except Exception as exc:  # noqa: BLE001
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
         print(result.answer)
         print(
             f"\n[model={result.generation.model}  "

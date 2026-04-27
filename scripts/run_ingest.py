@@ -3,7 +3,7 @@
 Usage::
 
     python scripts/run_ingest.py                # ingest the full default catalogue
-    python scripts/run_ingest.py --reset        # wipe vectors and re-embed everything
+    python scripts/run_ingest.py --reset        # wipe vectors + metadata and re-embed everything
     python scripts/run_ingest.py --only "Albert Einstein,Eiffel Tower"
 """
 
@@ -30,7 +30,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--reset",
         action="store_true",
-        help="Wipe the Chroma collection before ingesting (does not delete SQLite).",
+        help="Wipe the Chroma collection and SQLite metadata before ingesting.",
     )
     parser.add_argument(
         "--only",
@@ -70,7 +70,17 @@ def main() -> int:
 
     print(f" Ingesting {len(entities)} entities ...")
     pipeline = IngestionPipeline(batch_size=args.batch_size)
-    report = pipeline.run(entities, reset=args.reset)
+    try:
+        report = pipeline.run(entities, reset=args.reset)
+    except Exception as exc:  # noqa: BLE001
+        print()
+        print(" Ingestion could not start.")
+        print(f" Reason: {exc}")
+        print()
+        print(" Check that Ollama is running and the embedding model is pulled:")
+        print("   ollama serve")
+        print("   ollama pull nomic-embed-text")
+        return 2
 
     print()
     print("=" * 60)

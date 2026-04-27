@@ -142,6 +142,7 @@ class WikipediaIngestor:
 def save_raw(doc: WikiDocument, raw_dir: Path = RAW_DIR) -> Path:
     """Persist a single article to ``data/raw/<entity>.json`` for inspection."""
     ensure_dirs()
+    raw_dir.mkdir(parents=True, exist_ok=True)
     filename = doc.entity_name.replace(" ", "_").replace("/", "-") + ".json"
     path = raw_dir / filename
     with path.open("w", encoding="utf-8") as fh:

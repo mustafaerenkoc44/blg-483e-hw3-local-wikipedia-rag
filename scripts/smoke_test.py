@@ -3,8 +3,8 @@
 Verifies:
 
 * Wikipedia ingestion works for a single entity
-* The custom chunker produces non-empty, non-overlapping windows
-* SQLite schema accepts a document + its chunks
+* The custom chunker produces non-empty windows
+* SQLite schema accepts a document + its chunks in an isolated temp DB
 * The query router classifies the canonical example questions correctly
 
 Run::
@@ -15,6 +15,7 @@ Run::
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -50,18 +51,21 @@ def test_ingest_and_chunk() -> None:
     print(f"\n[ingest] fetching {target.name} ...")
     ingestor = WikipediaIngestor()
     doc = ingestor.ingest_entity(target)
-    save_raw(doc)
-    print(f"  fetched {doc.char_length} chars, url={doc.url}")
-    chunks = chunks_for_documents([doc])
-    print(f"[chunk] produced {len(chunks)} chunks (avg {sum(len(c.text) for c in chunks) // max(1,len(chunks))} chars each)")
-    assert chunks, "expected at least one chunk"
-    print(f"  first chunk preview: {chunks[0].text[:160]} ...")
+    with tempfile.TemporaryDirectory(prefix="wiki_rag_smoke_") as tmp:
+        tmp_dir = Path(tmp)
+        save_raw(doc, raw_dir=tmp_dir / "raw")
+        print(f"  fetched {doc.char_length} chars, url={doc.url}")
+        chunks = chunks_for_documents([doc])
+        avg_len = sum(len(c.text) for c in chunks) // max(1, len(chunks))
+        print(f"[chunk] produced {len(chunks)} chunks (avg {avg_len} chars each)")
+        assert chunks, "expected at least one chunk"
+        print(f"  first chunk preview: {chunks[0].text[:160]} ...")
 
-    db = MetadataDB()
-    doc_id = db.upsert_document(doc)
-    db.replace_chunks_for(doc_id, chunks)
-    stats = db.stats()
-    print(f"[sqlite] stats after upsert: {stats}")
+        db = MetadataDB(path=tmp_dir / "smoke.db")
+        doc_id = db.upsert_document(doc)
+        db.replace_chunks_for(doc_id, chunks)
+        stats = db.stats()
+        print(f"[sqlite] stats after upsert: {stats}")
 
 
 def main() -> int:
