@@ -254,7 +254,7 @@ Wikipedia article titles are case-sensitive. If you see a 404 for an entity you 
 
 ## Demo video
 
-Before final submission, paste the unlisted Loom or YouTube URL at the top of [`recommendation.md`](recommendation.md). The recording should be about 5 minutes and cover system overview, live ingestion, live Q&A on people / places / mixed / failure cases, the routing decision, and the trade-offs we made.
+[Watch the 5-minute walkthrough on YouTube (unlisted)](https://youtu.be/0cD4cYTlSbU). It covers the system overview, live ingestion, live Q&A on people / places / mixed / failure cases, the routing decision, and the trade-offs. The same link is pinned at the top of [`recommendation.md`](recommendation.md).
 
 ---
 

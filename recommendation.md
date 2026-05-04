@@ -1,7 +1,7 @@
 # Production Deployment Recommendations
 
-> **Demo video:** _to be added by the author after recording — paste the unlisted Loom or YouTube link here before the final commit._
-> Target length: ≤ 5 minutes. Suggested outline at the bottom of this file.
+> **Demo video:** [Watch on YouTube (unlisted)](https://youtu.be/0cD4cYTlSbU)
+> Length: ~5 minutes. Outline at the bottom of this file.
 
 This document complements `README.md` (how to run) and `product_prd.md` (what we built and why) by answering one question:
 
