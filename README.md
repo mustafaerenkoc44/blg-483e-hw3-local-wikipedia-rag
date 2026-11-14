@@ -15,7 +15,7 @@
 6. **Generates** grounded answers with a local Ollama LLM (`llama3.2:3b` by default) using a strict "answer only from context, otherwise say *I don't know*" prompt.
 7. **Surfaces** the retrieved context, the routing decision, and per-query latency in both a CLI and a Streamlit chat UI.
 
-Nothing leaves your machine. No API keys are required.
+Embedding, retrieval and answer generation run locally; ingestion fetches the articles from the Wikipedia API. No API keys are required.
 
 ---
 
@@ -58,7 +58,7 @@ Nothing leaves your machine. No API keys are required.
   Download: <https://ollama.com/download>.
 - ~3 GB of free disk space for the LLM weights and ~1 GB for Chroma + SQLite data.
 
-> No external services are used. The system runs without internet *after* ingestion, except for Wikipedia fetches you trigger explicitly.
+> After setup and article ingestion, the system answers questions offline; fetching or refreshing Wikipedia articles requires internet access.
 
 ---
 
